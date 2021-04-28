@@ -18,5 +18,6 @@ from django.urls import path, include
 from arts.home_views  import BannerView
 
 urlpatterns = [
-    path('banners', BannerView.as_view())
-]
+    path('banners', BannerView.as_view()),
+    path('users', include('users.urls')),
+    ]
