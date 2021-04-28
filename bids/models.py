@@ -14,8 +14,8 @@ class Location(models.Model):
     name           = models.CharField(max_length=100)
     address        = models.CharField(max_length=200)
     phone_number   = models.CharField(max_length=20)
-    site_url       = models.URLField(max_length=2000, null=True, blank=True)
-    operating_hour = models.CharField(max_length=45, null=True, blank=True)
+    site_url       = models.URLField(max_length=2000, null=True)
+    operating_hour = models.CharField(max_length=50, null=True)
     latitude_x     = models.DecimalField(max_digits=20, decimal_places=16)
     longitude_y    = models.DecimalField(max_digits=20, decimal_places=16)
 
