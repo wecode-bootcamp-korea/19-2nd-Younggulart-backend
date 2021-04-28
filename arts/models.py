@@ -60,7 +60,8 @@ class ArtColor(models.Model):
         db_table = 'art_colors'
 
 class Theme(models.Model):
-    name = models.CharField(max_length=45)
+    name  = models.CharField(max_length=45)
+    media = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True)
 
     class Meta:
         db_table = 'themes'
