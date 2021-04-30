@@ -16,10 +16,17 @@ class Art(models.Model):
     material      = models.ForeignKey('Material', on_delete=models.SET_NULL, null=True)
     color         = models.ManyToManyField('Color', through='ArtColor')
     views         = models.PositiveBigIntegerField()
+    status        = models.ForeignKey('ArtStatus', on_delete=models.SET_NULL, null=True)
     is_sold       = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'arts'
+
+class ArtStatus(models.Model):
+    name = models.CharField(max_length=45)
+
+    class Meta:
+        db_table = 'art_status'
 
 class ArtImage(models.Model):
     art       = models.ForeignKey(Art, on_delete=models.SET_NULL, null=True)

@@ -35,3 +35,24 @@ class AuctionUser(models.Model):
 
     class Meta:
         db_table = 'auction_users'
+
+class Bidding(models.Model):
+    art         = models.ForeignKey('arts.Art', on_delete=models.CASCADE)
+    user        = models.ManyToManyField('users.User', through='BiddingUser')
+    in_progress = models.BooleanField(default=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+    updated_at  = models.DateTimeField(auto_now=True)
+    finish_at   = models.DateTimeField()
+
+    class Meta:
+        db_table = 'biddings'
+
+class BiddingUser(models.Model):
+    user       = models.ForeignKey('users.User', on_delete=models.CASCADE)
+    bidding    = models.ForeignKey(Bidding, on_delete=models.CASCADE)
+    price      = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'bidding_users'
