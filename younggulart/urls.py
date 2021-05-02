@@ -20,5 +20,6 @@ from arts.home_views import BannerView, NavView
 urlpatterns = [
     path('nav', NavView.as_view()),
     path('banners', BannerView.as_view()),
-    path('users', include('users.urls'))
+    path('users', include('users.urls')),
+    path('arts', include('arts.urls')),
 ]
