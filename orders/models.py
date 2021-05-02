@@ -24,13 +24,16 @@ class OrderArt(models.Model):
         db_table = 'order_arts'
 
 class FrameMaterial(models.Model):
-    name = models.CharField(max_length=45)
+    name      = models.CharField(max_length=45)
+    image_url = models.URLField(max_length=2000)
 
     class Meta:
         db_table = 'frame_materials'
 
 class FrameSize(models.Model):
-    name = models.CharField(max_length=45)
+    name            = models.CharField(max_length=45)
+    price_rise_rate = models.DecimalField(max_digits=3, decimal_places=2)
+    thickness_cm    = models.DecimalField(max_digits=4, decimal_places=2)
 
     class Meta:
         db_table = 'frame_sizes'
