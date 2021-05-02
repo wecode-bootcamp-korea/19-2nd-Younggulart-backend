@@ -3,13 +3,122 @@ import datetime
 
 from django.test import TestCase, Client
 
-from .models        import Banner, Theme, Media, Art, ArtTheme, Paper, Material
+from .models        import Banner, Theme, Media, Art, ArtTheme, Paper, Material, ArtImage, ArtStatus
 from artists.models import Artist, Type, ArtistType
+
+client = Client()
+
+class CustomTestCase(TestCase):
+    def make_artist_model_instances(self):
+        artists = Artist.objects.bulk_create([
+            Artist(
+                id   = i,
+                name = i,
+                profile_image_url = f'{i}.jpeg',
+                introduction = i,
+                description  = i
+            ) for i in range(1,3)
+        ])
+
+        types = Type.objects.bulk_create([
+            Type(
+                id   = i+1,
+                name = v
+            ) for i, v in enumerate(['화가', '사진가'])
+        ])
+
+        artist_types = ArtistType.objects.bulk_create([
+            ArtistType(artist_id = i+1, type_id = i+1) for i in range(2)
+        ])
+
+        return {
+            "artists" : artists,
+            "types"   : types,
+            "artist_types" : artist_types,
+        }
+    
+    def make_art_model_instances(self):
+        media = Media.objects.create(
+            id   = 1,
+            name = '회화'
+        )
+
+        theme1 = Theme.objects.create(
+            id       = 1,
+            name     = '거리미술',
+            media_id = 1
+        )
+
+        theme2 = Theme.objects.create(
+            id       = 2,
+            name     = '대중문화',
+            media_id = 1
+        )
+
+        paper = Paper.objects.create(
+            id   = 1,
+            name = '종이'
+        )
+
+        material = Material.objects.create(
+            id   = 1,
+            name = '연필'
+        )
+
+        art_status = ArtStatus.objects.create(id=1, name='입찰 완료')
+
+        art1 = Art.objects.create(
+            id            = 1,
+            name          = '작품-1',
+            price         = 10000,
+            description   = '설명',
+            height_cm     = 100,
+            width_cm      = 100,
+            release_date  = datetime.datetime(2021,1,1),
+            thumbnail_url = '1.jpeg',
+            views         = 1,
+            is_sold       = False,
+            artist_id     = 1,
+            material_id   = 1,
+            media_id      = 1,
+            paper_id      = 1,
+            status_id     = 1
+        )
+
+        art2 = Art.objects.create(
+            id            = 2,
+            name          = '작품-2',
+            price         = 50000,
+            description   = '설명-2',
+            height_cm     = 100,
+            width_cm      = 100,
+            release_date  = datetime.datetime(2021,1,1),
+            thumbnail_url = '2.jpeg',
+            views         = 1,
+            is_sold       = False,
+            artist_id     = 2,
+            material_id   = 1,
+            media_id      = 1,
+            paper_id      = 1,
+            status_id     = 1
+        )
+
+        art_themes = ArtTheme.objects.bulk_create([
+            ArtTheme(art_id=i+1, theme_id=i+1) for i in range(2)
+        ])
+
+        return {
+            "media" : media,
+            "themes" : [theme1, theme2],
+            "paper" : paper,
+            "material" : material,
+            "arts" : [art1, art2],
+            "art_status" : art_status,
+            "art_themes" : art_themes
+        }
 
 class BannerTest(TestCase):
     def setUp(self):
-        client = Client()
-
         Banner.objects.create(
             id        = 2,
             image_url = 'https://bbbb.jpeg',
@@ -28,7 +137,6 @@ class BannerTest(TestCase):
         Banner.objects.all().delete()
 
     def test_banners_get_success(self):
-        client   = Client()
         response = client.get('/banners')
         self.assertEqual(response.json()['banners'][-1],
             {
@@ -39,95 +147,10 @@ class BannerTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-class NavTest(TestCase):
+class NavTest(CustomTestCase):
     def setUp(self):
-        client = Client()
-
-        artists = [
-            Artist(
-                id   = i,
-                name = i,
-                profile_image_url = f'https://{i}.jpeg',
-                introduction = i,
-                description  = i
-            ) for i in range(1,3)
-        ]
-
-        Artist.objects.bulk_create(artists)
-
-        types = [
-            Type(
-                id   = i+1,
-                name = v
-            ) for i, v in enumerate(['화가', '사진가'])
-        ]
-
-        Type.objects.bulk_create(types)
-
-        ArtistType.objects.bulk_create([ArtistType(artist_id = i+1, type_id = i+1) for i in range(2)])
-
-        Media.objects.create(
-            id   = 1,
-            name = '회화'
-        )
-
-        Theme.objects.create(
-            id       = 1,
-            name     = '거리미술',
-            media_id = 1
-        )
-
-        Theme.objects.create(
-            id       = 2,
-            name     = '대중문화',
-            media_id = 1
-        )
-
-        Paper.objects.create(
-            id   = 1,
-            name = '종이'
-        )
-
-        Material.objects.create(
-            id   = 1,
-            name = '연필'
-        )
-
-        Art.objects.create(
-            id            = 1,
-            name          = '작품-1',
-            price         = 10000,
-            description   = '설명',
-            height_cm     = 100,
-            width_cm      = 100,
-            release_date  = datetime.datetime(2021,1,1),
-            thumbnail_url = '1.jpeg',
-            views         = 1,
-            is_sold       = False,
-            artist_id     = 1,
-            material_id   = 1,
-            media_id      = 1,
-            paper_id      = 1
-        )
-
-        Art.objects.create(
-            id            = 2,
-            name          = '작품-2',
-            price         = 50000,
-            description   = '설명-2',
-            height_cm     = 100,
-            width_cm      = 100,
-            release_date  = datetime.datetime(2021,1,1),
-            thumbnail_url = '2.jpeg',
-            views         = 1,
-            is_sold       = False,
-            artist_id     = 2,
-            material_id   = 1,
-            media_id      = 1,
-            paper_id      = 1
-        )
-
-        ArtTheme.objects.bulk_create([ArtTheme(art_id=i+1, theme_id=i+1) for i in range(2)])
+        self.make_artist_model_instances()
+        self.make_art_model_instances()
 
     def tearDown(self):
         ArtistType.objects.all().delete()
@@ -141,7 +164,6 @@ class NavTest(TestCase):
         Material.objects.all().delete()
 
     def test_banners_get_success(self):
-        client   = Client()
         response = client.get('/nav')
         self.assertEqual(response.json(),
             {
@@ -153,7 +175,7 @@ class NavTest(TestCase):
                             {
                                 'id': 1,
                                 'name': '1',
-                                'profile_image': 'https://1.jpeg'
+                                'profile_image': '1.jpeg'
                             }
                         ]
                     },
@@ -164,7 +186,7 @@ class NavTest(TestCase):
                             {
                                 'id'            : 2,
                                 'name'          : '2',
-                                'profile_image' : 'https://2.jpeg'
+                                'profile_image' : '2.jpeg'
                             }
                         ]
                     }
@@ -183,3 +205,50 @@ class NavTest(TestCase):
             }
         )
         self.assertEqual(response.status_code, 200)
+
+class ArtDetailTest(CustomTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.make_artist_model_instances(ArtDetailTest)
+        cls.make_art_model_instances(ArtDetailTest)
+
+        ArtImage.objects.create(id=1, art_id=1, image_url='thumbnail.jpeg')
+        ArtImage.objects.create(id=2, art_id=1, image_url='url.jpeg')
+
+    def test_art_get_success(self):
+        client   = Client()
+        response = client.get('/arts/1')
+
+        self.maxDiff = None
+        self.assertEqual(response.json(),
+            {
+                'art': {
+                    'id'            : 1,
+                    'author'        : '1',
+                    'description'   : '설명',
+                    'height_cm'     : '100.00',
+                    'width_cm'      : '100.00',
+                    'images'        : ['thumbnail.jpeg','url.jpeg'],
+                    'material'      : '연필',
+                    'name'          : '작품-1',
+                    'paper'         : '종이',
+                    'price'         : '10000.00',
+                    'released_year' : '2021',
+                    'status'        : '입찰 완료',
+                    'status_id'     : 1
+                },
+                'author': {
+                    'description'       : '1',
+                    'introduction'      : '1',
+                    'name'              : '1',
+                    'profile_image_url' : '1.jpeg'
+                }
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_art_get_not_found(self):
+        response = client.get('/arts/3')
+
+        self.assertEqual(response.json(),{'MESSAGE' : 'INVALID ART'})
+        self.assertEqual(response.status_code, 404)

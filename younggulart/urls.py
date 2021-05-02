@@ -22,4 +22,5 @@ urlpatterns = [
     path('banners', BannerView.as_view()),
     path('users', include('users.urls')),
     path('auctions', include('bids.auction_urls')),
+    path('arts', include('arts.urls')),
 ]
