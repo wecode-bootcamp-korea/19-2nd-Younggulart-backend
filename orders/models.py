@@ -24,8 +24,9 @@ class OrderArt(models.Model):
         db_table = 'order_arts'
 
 class FrameMaterial(models.Model):
-    name      = models.CharField(max_length=45)
-    image_url = models.URLField(max_length=2000)
+    name             = models.CharField(max_length=45)
+    image_url        = models.URLField(max_length=2000)
+    render_image_url = models.URLField(max_length=2000)
 
     class Meta:
         db_table = 'frame_materials'
