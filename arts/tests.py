@@ -252,3 +252,66 @@ class ArtDetailTest(CustomTestCase):
 
         self.assertEqual(response.json(),{'MESSAGE' : 'INVALID ART'})
         self.assertEqual(response.status_code, 404)
+
+class ArtListTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        artist = Artist.objects.create(
+                name = '이이', 
+                profile_image_url = '사진.jpg',
+                introduction = '소개',
+                description = '설명')
+        
+        material = Material.objects.create(name='연필')
+        paper    = Paper.objects.create(name='도화지')
+        media    = Media.objects.create(name='회화')
+        
+        art = Art.objects.create(
+                name          = '그림',
+                price         = 5000,
+                description   = '설명',
+                thumbnail_url = 'jpg',
+                height_cm     = 100,
+                width_cm      = 100,
+                release_date  = '2021-05-04',
+                views         = 0,
+                is_sold       = 0,
+                artist        = artist,
+                material      = material,
+                media         = media,
+                paper         = paper
+                )
+    
+    def tearDown(self):
+        Art.objects.all().delete()
+        Media.objects.all().delete()
+        Paper.objects.all().delete()
+        Material.objects.all().delete()
+        Artist.objects.all().delete()
+
+    def test_artlist_success(self):
+        response = client.get('/artlist/2')
+        self.maxDiff = None
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'MESSAGE' : 'SUCCESS',
+            'RESULT' : [{
+                'id'                : 3,
+                'name'              : '이이',
+                'profile_image_url' : '사진.jpg',
+                'arts'              : [{
+                    'id'             : 3,
+                    'thumbnail_url'  : 'jpg',
+                    'price'          : '5000.00',
+                    'height_cm'      : '100.00',
+                    'width_cm'       : '100.00',
+                    'material__name' : '연필',
+                    'paper__name'    : '도화지'
+                    }]
+                }]
+            })
+
+    def test_artlist_value_error(self):
+        response = client.get('/artlist/1?max_price=test')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'MESSAGE' : 'VALUE ERROR'})

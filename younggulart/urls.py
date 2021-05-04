@@ -16,6 +16,7 @@ Including another URLconf
 from django.urls import path, include
 
 from arts.home_views import BannerView, NavView
+from arts.views import ArtList
 
 urlpatterns = [
     path('nav', NavView.as_view()),
@@ -23,4 +24,5 @@ urlpatterns = [
     path('users', include('users.urls')),
     path('auctions', include('bids.auction_urls')),
     path('arts', include('arts.urls')),
+    path('artlist/<int:media_id>', ArtList.as_view()),
 ]
