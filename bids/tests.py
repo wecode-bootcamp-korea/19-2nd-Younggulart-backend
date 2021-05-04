@@ -6,50 +6,20 @@ import datetime
 # Create your tests here.
 from django.test import TestCase, Client
 
+from arts.tests import CustomTestCase
+
 from arts.models    import Art, Media, Paper, Material
 from artists.models import Artist
-from .models        import Location, Auction, AuctionArt
+from .models        import Location, Auction, AuctionArt, Bidding
 
 client = Client()
 
-class AuctionTest(TestCase):
+class AuctionTest(CustomTestCase):
     @classmethod
     def setUpTestData(cls):
-        Artist.objects.create(
-            id                = 1,
-            name              = '무니원',
-            profile_image_url = 'url.jpeg',
-            introduction      = '아',
-            description       = '야'
-        )
-        Media.objects.create(
-            id   = 1,
-            name = '회화'
-        )
-        Paper.objects.create(
-            id   = 1,
-            name = '종이'
-        )
-        Material.objects.create(
-            id   = 1,
-            name = '연필'
-        )
-        Art.objects.create(
-            id            = 1,
-            name          = '작품-1',
-            price         = 10000,
-            description   = '설명',
-            height_cm     = 100,
-            width_cm      = 100,
-            release_date  = datetime.datetime(2021,1,1),
-            thumbnail_url = '1.jpeg',
-            views         = 0,
-            is_sold       = False,
-            artist_id     = 1,
-            material_id   = 1,
-            media_id      = 1,
-            paper_id      = 1
-        )
+        cls.make_artist_model_instances(cls)
+        cls.make_art_model_instances(cls)
+
         Location.objects.create(
             id             = 1,
             name           = '장소',
@@ -91,8 +61,8 @@ class AuctionTest(TestCase):
                         'y'            : '37.5128690375928002',
                         'arts' : [
                             {
-                                'artist'           : '무니원',
-                                'artist_image_url' : 'url.jpeg',
+                                'artist'           : '1',
+                                'artist_image_url' : '1.jpeg',
                                 'name'             : '작품-1',
                                 'thumbnail_url'    : '1.jpeg',
                                 'price'            : '10000.00',
@@ -117,3 +87,28 @@ class AuctionTest(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertRaises(ValueError)
         self.assertEqual(response.json()['MESSAGE'], 'VALUE ERROR') 
+
+class BiddingGetTest(CustomTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.make_artist_model_instances(cls)
+        cls.make_art_model_instances(cls)
+        Bidding.objects.create(id=1, art_id=1, finish_at=datetime.datetime(2021,1,1,1,1))
+    
+    def test_get_bidding_on_progress_success(self):
+        response = client.get('/biddings/in-progress')
+
+        self.assertEqual(response.json(),
+            {
+                "arts": [
+                    {
+                        "artist": "1",
+                        "finish_at": "01-01 01:01",
+                        "id": 1,
+                        "thumbnail_url": "1.jpeg",
+                        "title": "작품-1"
+                    }
+                ]
+            }
+        )
+        self.assertEqual(response.status_code, 200)
