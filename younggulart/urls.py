@@ -25,4 +25,5 @@ urlpatterns = [
     path('auctions', include('bids.auction_urls')),
     path('arts', include('arts.urls')),
     path('artlist/<int:media_id>', ArtList.as_view()),
+    path('biddings', include('bids.bidding_urls')),
 ]

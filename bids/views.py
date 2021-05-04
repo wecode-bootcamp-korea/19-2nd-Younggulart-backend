@@ -3,7 +3,7 @@ from datetime import datetime
 from django.views         import View
 from django.http.response import JsonResponse
 
-from .models      import Auction
+from .models import Auction, Bidding
 
 class AuctionView(View):
     def get(self, request):
@@ -48,3 +48,22 @@ class AuctionView(View):
 
         except ValueError:
             return JsonResponse({'MESSAGE' : 'VALUE ERROR'}, status=400)
+
+class BiddingView(View):
+    def get(self, request):
+        biddings = Bidding.objects \
+            .filter(in_progress=True) \
+            .select_related('art__artist') \
+            .order_by('finish_at') \
+
+        arts = [
+            {
+                'id'            : bidding.art.id,
+                'thumbnail_url' : bidding.art.thumbnail_url,
+                'title'         : bidding.art.name,
+                'artist'        : bidding.art.artist.name,
+                'finish_at'     : bidding.finish_at.strftime('%m-%d %H:%M'),
+            } for bidding in biddings
+        ]
+
+        return JsonResponse({'arts' : arts}, status=200)
