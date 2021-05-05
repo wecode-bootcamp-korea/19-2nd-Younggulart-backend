@@ -1,16 +1,17 @@
-from django.test import TestCase
-
 import json
 import datetime
 
-# Create your tests here.
-from django.test import TestCase, Client
+from django.test    import TestCase, Client
+from unittest.mock  import MagicMock, patch
 
-from arts.tests import CustomTestCase
+from arts.tests     import CustomTestCase
 
-from arts.models    import Art, Media, Paper, Material
 from artists.models import Artist
+from users.models   import User
+from arts.models    import Theme, Media, Art, ArtTheme, Paper, Material, ArtImage, ArtStatus
 from .models        import Location, Auction, AuctionArt, Bidding
+
+from my_settings    import KAKAO_TEST_TOKEN
 
 client = Client()
 
@@ -112,3 +113,72 @@ class BiddingGetTest(CustomTestCase):
             }
         )
         self.assertEqual(response.status_code, 200)
+
+class KaKaoMessagePostTest(CustomTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.make_artist_model_instances(cls)
+        cls.make_art_model_instances(cls)
+        cls.header = {
+            'HTTP_Authorization' : KAKAO_TEST_TOKEN,
+            'content_type'       : 'application/json'
+        }
+        cls.body = {'offered_price' : 10000}
+        User.objects.create(email='msb925@naver.com')
+
+    @patch('bids.views.requests')
+    def test_kakao_message_success(self, mock_requests):
+        class MockResponse :
+            def json(self) : return {"result_code":0}
+
+        mock_requests.post = MagicMock(return_value=MockResponse())
+
+        response = client.post(
+            '/biddings/1',
+            json.dumps(self.body),
+            **self.header
+        )
+
+    @patch('bids.views.requests')
+    def test_kakao_message_sabotaged_template_fail(self, mock_requests):
+        class MockResponse :
+            def json(self) : return {"msg":"wrong template"}  
+
+        mock_requests.post = MagicMock(return_value=MockResponse()) 
+
+        response  = client.post(
+            '/biddings/1',
+            json.dumps(self.body),
+            **self.header
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_kakao_message_invalid_art_fail(self):
+        response = client.post(
+            '/biddings/10990',
+            json.dumps(self.body),
+            **self.header
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(),
+            {
+                'MESSAGE' : "INVALID ART"
+            }
+        )
+
+    def test_kakao_message_key_error_fail(self):
+        self.body = {'price' : 10}
+        response  = client.post(
+            '/biddings/1',
+            json.dumps(self.body),
+            **self.header
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(),
+            {
+                'MESSAGE' : "KEY ERROR"
+            }
+        )
