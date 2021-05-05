@@ -23,11 +23,14 @@ class ArtList(View):
                     art__price__range     = (min_price, max_price),
                     art__height_cm__range = (min_height, max_height),
                     art__width_cm__range  = (min_width, max_width),
-                    art__media_id = media_id)[offset:offset+limit]
+                    art__media_id         = media_id)
             
+            artists_counts = list(set([artist.id for artist in artists]))
+
             filter_set = {'price__range'   : (min_price, max_price),
                         'height_cm__range' : (min_height, max_height),
-                        'width_cm__range'  : (min_width, max_width)}
+                        'width_cm__range'  : (min_width, max_width),
+                        'media_id'         : media_id}
 
             results = [
                 {
@@ -42,11 +45,12 @@ class ArtList(View):
                                     'width_cm', 
                                     'material__name', 
                                     'paper__name'))
-                        } for artist in artists
+                                } for artist in artists[offset:offset+limit]
                     ]
-
-            return JsonResponse({'MESSAGE' : 'SUCCESS',
-                'RESULT' : results}, status=200)
+            return JsonResponse({
+                'MESSAGE'       : 'SUCCESS',
+                'RESULT'        : results,
+                'TOTAL_ARTISTS' : len(artists_counts)}, status=200)
 
         except ValueError:
             return JsonResponse({'MESSAGE' : 'VALUE ERROR'}, status=400)
