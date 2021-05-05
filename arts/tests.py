@@ -257,10 +257,10 @@ class ArtListTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         artist = Artist.objects.create(
-                name = '이이', 
+                name              = '이이', 
                 profile_image_url = '사진.jpg',
-                introduction = '소개',
-                description = '설명')
+                introduction      = '소개',
+                description       = '설명')
         
         material = Material.objects.create(name='연필')
         paper    = Paper.objects.create(name='도화지')
@@ -307,7 +307,8 @@ class ArtListTest(TestCase):
                     'material__name' : '연필',
                     'paper__name'    : '도화지'
                     }]
-                }]
+                }],
+            'TOTAL_ARTISTS' : 1
             })
 
     def test_artlist_value_error(self):
