@@ -1,9 +1,17 @@
-from datetime import datetime
+import json
+import requests
 
+from datetime import datetime, timedelta
+
+from django.db            import transaction
 from django.views         import View
 from django.http.response import JsonResponse
 
-from .models import Auction, Bidding
+from users.models import User
+from arts.models  import Art
+from .models      import Auction, Bidding, BiddingUser
+
+from users.utils  import login_decorator
 
 class AuctionView(View):
     def get(self, request):
@@ -67,3 +75,73 @@ class BiddingView(View):
         ]
 
         return JsonResponse({'arts' : arts}, status=200)
+
+    @login_decorator
+    def post(self, request, art_id=None):
+        BIDDING_IN_PROGRESS_STATUS_ID = 1
+        BIDDING_VALID_DURATION_DAYS   = 2
+        try:
+            user          = request.user
+            data          = json.loads(request.body)
+            offered_price = data['offered_price']
+            access_token  = request.headers.get('Authorization')
+
+            if not Art.objects.filter(id=art_id).exists():
+                return JsonResponse({'MESSAGE' : 'INVALID ART'}, status=404)
+
+            art = Art.objects.get(id=art_id)
+
+            with transaction.atomic():
+                bidding, created = art.bidding_set.get_or_create(
+                    in_progress  = True,
+                    defaults     = {
+                        'finish_at' : datetime.now() + timedelta(days=BIDDING_VALID_DURATION_DAYS)
+                    }
+                )
+
+                BiddingUser.objects.update_or_create(
+                    user     = user, 
+                    bidding  = bidding, 
+                    defaults = {'price' : offered_price}
+                )
+
+                art.status_id = BIDDING_IN_PROGRESS_STATUS_ID
+                art.save()
+
+            response = requests.post(
+                'https://kapi.kakao.com/v2/api/talk/memo/default/send',
+                headers = {'Authorization' : f'Bearer {access_token}'},
+                data    = {
+                    "template_object" : json.dumps(
+                        {
+                            "object_type" : "feed",
+                            "content"     : {
+                                "title"       : f"{art.name} 입찰 완료",
+                                "description" : f"나의 입찰가 : {offered_price}원",
+                                "image_url"   : art.thumbnail_url,
+                                "link"        : {
+                                    "web_url" : "https://www.singulart.com/ko/"
+                                }
+                            },
+                            "buttons" : [
+                                {
+                                    "title" : "경매 상황 보기",
+                                    "link"  : {
+                                        "web_url" : "https://www.singulart.com/ko/"
+                                    }
+                                }
+                            ]
+                        }
+                    )
+                }
+            )
+
+            failed_message = response.json().get('msg')
+            
+            if failed_message:
+                return JsonResponse({'MESSAGE' : failed_message}, status=400)
+
+            return JsonResponse({'MESSAGE' : 'SUCCESS'}, status=200)
+
+        except KeyError:
+            return JsonResponse({'MESSAGE' : 'KEY ERROR'}, status=400)
