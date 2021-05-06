@@ -35,12 +35,12 @@ class FrameViewTest(TestCase):
         response = client.get('/frame/1')
         
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {'MESSAGE' : 'SUCCESS',
-            'SIZE' : [{
+        self.assertEqual(response.json(), {'message' : 'SUCCESS',
+            'sizes' : [{
                 'size'  : 'S',
                 'price' : '75900.000000',
                 }],
-            'MATERIAL' : [{
+            'materials' : [{
                 'material'         : 'Black wood',
                 'image_url'        : '사진.jpg',
                 'render_image_url' : '테두리.jpg'
