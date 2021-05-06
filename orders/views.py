@@ -25,9 +25,9 @@ class FrameView(View):
                     } for frame in FrameMaterial.objects.all()
                 ]
             
-            return JsonResponse({'MESSAGE'  : 'SUCCESS', 
-                                 'SIZE'     : frame_sizes_prices, 
-                                 'MATERIAL' : frame_materials}, status = 200)
+            return JsonResponse({'message'  : 'SUCCESS', 
+                                 'sizes'     : frame_sizes_prices, 
+                                 'materials' : frame_materials}, status = 200)
 
         except Art.DoesNotExist:
             return JsonResponse({'MESSAGE' : 'ART DOES NOT EXIST'}, status=404)
