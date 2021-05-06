@@ -8,16 +8,17 @@ from artists.models import Artist
 
 class ArtList(View):
     def get(self, request, media_id):
-
+        PAGINATION_LIMIT = 5
         try:
-            offset     = int(request.GET.get('offset', 0))
-            limit      = int(request.GET.get('limit', 5))
             min_price  = int(request.GET.get('min_price', 0))
             max_price  = int(request.GET.get('max_price', 99999999999))
             min_height = int(request.GET.get('min_height', 0))
             max_height = int(request.GET.get('max_height', 9999))
             min_width  = int(request.GET.get('min_width', 0))
             max_width  = int(request.GET.get('max_width', 9999))
+            page       = int(request.GET.get('page', 1))
+            offset     = (page - 1) * PAGINATION_LIMIT
+            limit      = offset + PAGINATION_LIMIT
             
             artists = Artist.objects.filter(
                     art__price__range     = (min_price, max_price),
@@ -45,8 +46,9 @@ class ArtList(View):
                                     'width_cm', 
                                     'material__name', 
                                     'paper__name'))
-                                } for artist in artists[offset:offset+limit]
+                                } for artist in artists[offset:limit]
                     ]
+
             return JsonResponse({
                 'MESSAGE'       : 'SUCCESS',
                 'RESULT'        : results,
